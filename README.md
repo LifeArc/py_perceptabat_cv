@@ -9,7 +9,7 @@
 * Tested with Python 3.7.2.
 
 ## Example usage from CLI:
-python py_perceptabat.py <input_filepath> <logD pH> <boolean for parallelization> <number of cores> <logP algorithm> <pKa alogrithm> <logD algorithms>
+python py_perceptabat.py 'input_filepath' 'logD pH' 'boolean for parallelization' 'number of cores' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
 e.g.
 ```
 python py_perceptabat.py <input_filepath> 7.4 True 4 classic classic classic-classic
