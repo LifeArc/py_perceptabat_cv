@@ -24,12 +24,12 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     ## Description
     * Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms.
     * Supports multithreading.
-    * Results are returned as a dictioanry and are written to a CSV file.
+    * Results are returned as a dictionary and are written to a CSV file.
     * No non-standard lib package dependencies.
     * Tested with Python 3.7.2.
 
     ## Example usage from CLI:
-    python py_perceptabat.py <input_filepath> <logD pH> <boolean for parallelization> <number of cores> <logP algorithm> <pKa alogrithm> <logD algorithms>
+    python py_perceptabat.py 'input_filepath' 'logD pH' 'boolean for parallelization' 'number of cores' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
     e.g.
     ```
     python py_perceptabat.py <input_filepath> 7.4 True 4 classic classic classic-classic

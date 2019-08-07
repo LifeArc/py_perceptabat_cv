@@ -4,7 +4,7 @@
 ## Description
 * Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms.
 * Supports multithreading.
-* Results are returned as a dictioanry and are written to a CSV file.
+* Results are returned as a dictionary and are written to a CSV file.
 * No non-standard lib package dependencies.
 * Tested with Python 3.7.2.
 
