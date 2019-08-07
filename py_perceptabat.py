@@ -2,40 +2,55 @@
 
 # Author: Aretas Gaspariunas
 
-# todo: GALAS algorithm support; training using in-house data -ULOGP; write all columns to csv
+# todo: support for pKa training, find a way to get .PCD file for training, use something other than sys for arg input
 
 import os
 import subprocess
 from threading import Thread
-from typing import Dict
+from typing import Dict, Optional
 import shutil
 import csv
 import sys
 
 def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
-    parallel: bool = False, threads: int = 4) -> Dict[str, Dict[str, str]]:
+    parallel: bool = False, threads: int = 4, logp_algo: str = 'classic',
+    pka_algo: str = 'classic', logd_algo: str = 'classic-classic',
+    logp_train: Optional[str] = None) -> Dict[str, Dict[str, str]]:
 
     '''
+    #py_perceptabat
     Python wrapper function for ACD perceptabat_cv with parallel processing support.
-    Calculates logP, logD, and most acidic and basic pKa using classic algorithm.
+
+    ##Description
+    Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms.
     Supports multithreading.
-    Results are written to a CSV file.
+    Results are returned as a dictioanry and are written to a CSV file.
     No non-standard lib package dependencies.
     Tested with Python 3.7.2.
 
-    Arguments:
+    ##Example usage from CLI:
+    python py_perceptabat.py <input_filepath> <logD pH> <boolean for parallelization> <number of cores> <logP algorithm> <pKa alogrithm> <logD algorithms>
+    e.g. python py_perceptabat.py <input_filepath> 7.4 True 4 classic classic classic-classic
+
+    ##Arguments
     Set smiles_filepath to specify SMILES input file. The file must have two columns: SMILES and ID separated by a space;
     Set logd_ph to define at which pH logD will be calculated;
     Set parallel=True to enable parallelization using threading;
-    Set threads argument to specify the number of threads for parallelization. Inactive if parallel=False.
+    Set threads argument to specify the number of threads for parallelization. Inactive if parallel=False;
+    Set *_algo arguments to specify algorithm for each property prediction.
+    LogD predictions use logp and pka properties and algorithms for both respecitvely must be provided e.g. classic-galas. Please refer to ACD documentation for more details;
+    Set logp_train to specify .PCD training file for logP prediction.
 
-    Example usage from CLI:
-    python py_perceptabat.py <input_filepath> <logD pH> <boolean for parallelization> <number of cores>
-    e.g. python py_perceptabat.py <input_filepath> 7.4 True 4
+    NOTE: training from CLI is currently disabled.
     '''
 
-    COLUMNS = ['acd_logp', 'acd_logd_ph', 'acd_logd', 'acd_acid_pka', 'acd_basic_pka']
+    COLUMNS = []
     MAIN_PATH = os.path.dirname(os.path.realpath(__file__))
+
+    # converting arguments to actual booleans
+    bool_trans = {'True':True, 'False':False}
+    if parallel in bool_trans:
+        parallel = bool_trans[parallel]
 
     def create_trans_dict(input_file):
 
@@ -84,52 +99,53 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
                 os.remove(filepath.split('.')[0]+'__chunk__'+
                     str(file_count)+'.'+filepath.split('.')[1])
 
-    def percepta_cmd(filename):
+    def percepta_cmd(filename, logp_train=logp_train):
 
-        subprocess.Popen(["perceptabat_cv", "-OOVERWRITE", "-MLOGP", "-TLOGP",
-            "-MLOGD", "-OLOGDPH1{0}".format(logd_ph), "-TLOGD", "-MPKASINGLE",
-            "-TPKA", "-OPKAMOST", "-OOUTSPLITACIDBASIC", "-TFNAME{0}.result".format(filename),
-            filename], stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT).wait()
+        algo_dict = {
+            'logp':{"classic":"-OLOGPALGA", "galas":"-OLOGPALGGALAS","consensus":"-OLOGPALGCONSENSUS"},
+            'pka':{"classic":"-MPKAAPP","galas":"-MPKAAPPGALAS"},
+            'logd':{"classic-classic":"-OLOGDALGCLASS", "classic-galas":"-OLOGDALGCLASSGALAS",
+                "galas-classic":"-OLOGDALGGALASCLASS","galas-galas":"-OLOGDALGGALAS",
+                "consensus-classic":"-OLOGDALGCONSCLASS","consensus-galas":"-OLOGDALGCONSGALAS"}
+        }
+
+        cmd_list = ["perceptabat_cv", "-OOVERWRITE", "-MLOGP", algo_dict['logp'][logp_algo.lower()],
+            "-TLOGP", "-MLOGD", "-OLOGDPH1{0}".format(logd_ph), algo_dict['logd'][logd_algo.lower()],
+            "-TLOGD", algo_dict['pka'][pka_algo.lower()], "-TPKA", "-OPKAMOST", "-OOUTSPLITACIDBASIC",
+            "-MSIGMA", "-TSIGMA", "-TFNAME{0}.result".format(filename)]
+
+        logp_train = None if logp_train == 'None' else logp_train
+        if logp_train is not None:
+            cmd_list.append("-ULOGP{}".format(logp_train))
+        cmd_list.append(filename)
+
+        # subprocess.Popen(cmd_list).wait()
+        subprocess.Popen(cmd_list, stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT).wait()
 
     def parse_acd_output(result, offset=0):
 
-        # todo: include all information
         parsed_output = {}
 
         for line in result:
-            if 'ACD_LogP:' in line:
+            if (line.split()[0].isdigit() and line.split()[1] != 'ID:' and
+                not line.split()[1].lower().endswith('caution:')):
                 cp_id = str(int(line.split()[0]) + offset)
-                logp = line.split(': ')[1].rstrip('\n')
+                value = line.split(': ')[1].rstrip('\n')
                 if not cp_id in parsed_output:
                     parsed_output[cp_id] = {}
-                parsed_output[cp_id]['acd_logp'] = logp
-            elif 'ACD_LogD_pH:' in line:
-                cp_id = str(int(line.split()[0]) + offset)
-                ph = line.split(': ')[1].rstrip('\n')
-                if not cp_id in parsed_output:
-                    parsed_output[cp_id] = {}
-                parsed_output[cp_id]['acd_logd_ph'] = ph
-            elif 'ACD_LogD:' in line:
-                cp_id = str(int(line.split()[0]) + offset)
-                logd = line.split(': ')[1].rstrip('\n')
-                if not cp_id in parsed_output:
-                    parsed_output[cp_id] = {}
-                parsed_output[cp_id]['acd_logd'] = logd
-            elif 'ACD_pKa_Acidic_Single_1:' in line:
-                cp_id = str(int(line.split()[0]) + offset)
-                acid_pka = line.split(': ')[1].rstrip('\n')
-                if not cp_id in parsed_output:
-                    parsed_output[cp_id] = {}
-                parsed_output[cp_id]['acd_acid_pka'] = acid_pka
-            elif 'ACD_pKa_Basic_Single_1:' in line:
-                cp_id = str(int(line.split()[0]) + offset)
-                basic_pka = line.split(': ')[1].rstrip('\n')
-                if not cp_id in parsed_output:
-                    parsed_output[cp_id] = {}
-                parsed_output[cp_id]['acd_basic_pka'] = basic_pka
+                parsed_output[cp_id][line.split()[1].rstrip(':').lower()] = value
             else:
                 continue
 
+        # creating missing keys
+        counter = 0
+        for key, value in parsed_output.items():
+            for col, value1 in value.items():
+                if col not in COLUMNS:
+                    COLUMNS.append(col)
+            counter += 1
+            if counter > 100:
+                break
         for key, value in parsed_output.items():
             for col in COLUMNS:
                 if col not in value:
@@ -195,7 +211,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
                 os.remove(os.path.join(MAIN_PATH, i))
 
     # running without threading
-    else:
+    elif parallel is False:
         percepta_cmd(smiles_filepath)
 
         with open('{0}.result'.format(smiles_filepath), 'r') as output_file:
@@ -221,4 +237,5 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
 if __name__ == "__main__":
 
     py_perceptabat(smiles_filepath=sys.argv[1], logd_ph=float(sys.argv[2]),
-        parallel=eval(sys.argv[3]), threads=int(sys.argv[4]))
+        parallel=sys.argv[3], threads=int(sys.argv[4]), logp_algo=sys.argv[5],
+        pka_algo=sys.argv[6], logd_algo=sys.argv[7], logp_train=None)
