@@ -28,7 +28,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     * No non-standard lib package dependencies.
     * Tested with Python 3.7.2.
 
-    ## Example usage from CLI:
+    ## Example usage from CLI
     python py_perceptabat.py 'input_filepath' 'logD pH' 'boolean for parallelization' 'number of cores' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
     e.g.
     ```
@@ -40,7 +40,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     * Set logd_ph to define at which pH logD will be calculated;
     * Set parallel=True to enable parallelization using threading;
     * Set threads argument to specify the number of threads for parallelization. Inactive if parallel=False;
-    * Set *_algo arguments to specify algorithm for each property prediction.
+    * Set *_algo arguments to specify algorithm for each property prediction. Note that when pka_algo='galas' perceptabat_cv outputs all pKa vlaues for the molecule - it's a bug
     * LogD predictions use logP and pKa properties; algorithms for both respectively must be provided separated by a dash e.g. classic-galas. Please refer to ACD documentation for more details;
     * Set logp_train to specify .PCD training file for logP prediction. NOTE training from CLI is currently disabled as the feature has not been properly tested yet.
 
@@ -131,8 +131,11 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
         parsed_output = {}
 
         for line in result:
+
             if (line.split()[0].isdigit() and line.split()[1] != 'ID:' and
-                not line.split()[1].lower().endswith('caution:')):
+                'caution' not in line.split()[1].lower() and
+                'warning' not in line.split()[1].lower()):
+
                 cp_id = str(int(line.split()[0]) + offset)
                 value = line.split(': ')[1].rstrip('\n')
                 if not cp_id in parsed_output:
@@ -148,7 +151,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
                 if col not in COLUMNS:
                     COLUMNS.append(col)
             counter += 1
-            if counter > 100:
+            if counter > 1000:
                 break
         for key, value in parsed_output.items():
             for col in COLUMNS:
