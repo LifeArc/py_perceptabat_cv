@@ -2,8 +2,6 @@
 
 # Author: Aretas Gaspariunas
 
-# todo: support for pKa training, find a way to get .PCD file for training, use something other than sys for arg input
-
 import os
 import subprocess
 from threading import Thread
@@ -13,9 +11,8 @@ import csv
 import sys
 
 def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
-    parallel: bool = False, threads: int = 4, logp_algo: str = 'classic',
-    pka_algo: str = 'classic', logd_algo: str = 'classic-classic',
-    logp_train: Optional[str] = None) -> Dict[str, Dict[str, str]]:
+    threads: int = 1, logp_algo: str = 'classic', pka_algo: str = 'classic',
+    logd_algo: str = 'classic-classic', logp_train: Optional[str] = None) -> Dict[str, Dict[str, str]]:
 
     '''
     # py_perceptabat
@@ -29,32 +26,30 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     * Tested with Python 3.7.2.
 
     ## Example usage from CLI
-    python py_perceptabat.py 'input_filepath' 'logD pH' 'boolean for parallelization' 'number of cores' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
+    ```
+    python py_perceptabat.py 'input_filepath' 'logD pH' 'number of threads' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
+    ```
     e.g.
     ```
-    python py_perceptabat.py <input_filepath> 7.4 True 4 classic classic classic-classic
+    python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
     ```
 
     ## Arguments
     * Set smiles_filepath to specify SMILES input file. The file must have two columns: SMILES and ID separated by a space;
     * Set logd_ph to define at which pH logD will be calculated;
-    * Set parallel=True to enable parallelization using threading;
-    * Set threads argument to specify the number of threads for parallelization. Inactive if parallel=False;
-    * Set *_algo arguments to specify algorithm for each property prediction. Note that when pka_algo='galas' perceptabat_cv outputs all pKa vlaues for the molecule - it's a bug
-    * LogD predictions use logP and pKa properties; algorithms for both respectively must be provided separated by a dash e.g. classic-galas. Please refer to ACD documentation for more details;
+    * Set threads argument to specify the number of threads for parallelization. Threads are CPU core bound i.e. one thread per a core;
+    * Set *_algo arguments to specify algorithm for each property prediction. Note that when pka_algo='galas' perceptabat_cv outputs all pKa vlaues for the molecule - this is an expected behaviour of perceptabat_cv;
+    * LogD predictions use logP and pKa properties; algorithms for both respectively must be provided separated by a dash e.g. classic-galas. Please refer to ACD documentation for more details about algorithms;
     * Set logp_train to specify .PCD training file for logP prediction. NOTE training from CLI is currently disabled as the feature has not been properly tested yet.
 
     ## Authors
     * This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com).
+
+    todo: add argparse for CLI argument passing, add unit tests, pka training, test logp training
     '''
 
     COLUMNS = []
     MAIN_PATH = os.path.dirname(os.path.realpath(__file__))
-
-    # converting arguments to actual booleans
-    bool_trans = {'True':True, 'False':False}
-    if parallel in bool_trans:
-        parallel = bool_trans[parallel]
 
     def create_trans_dict(input_file):
 
@@ -86,7 +81,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
             file_count = 0
 
             chunked_file_object = open(filepath.split('.')[0]+'__chunk__'+
-                str(file_count)+'.'+filepath.split('.')[1],"wb")
+                str(file_count)+'.'+filepath.split('.')[1], "wb")
             for line in file_obj:
                 chunked_file_object.write(line)
                 line_count += 1
@@ -95,7 +90,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
                     file_count += 1
                     line_count = 0
                     chunked_file_object = open(filepath.split('.')[0]+'__chunk__'+
-                        str(file_count)+'.'+filepath.split('.')[1],"wb")
+                        str(file_count)+'.'+filepath.split('.')[1], "wb")
 
             chunked_file_object.close()
 
@@ -160,29 +155,48 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
 
         return parsed_output
 
+    def parsing_chunks(path, chunksize):
+
+        # parsing chunks
+        result_dict = {}
+        for i in os.listdir(path):
+            if '__chunk__' and '.result' in i:
+
+                chunk_no = int(i.split('__')[2].split('.')[0])
+
+                with open(os.path.join(path, i), 'r') as output_file:
+                    temp_result_dict = parse_acd_output(output_file, offset=chunk_no*chunksize)
+                    result_dict.update(temp_result_dict)
+
+            # remove chunk files
+            if '__chunk__' in i:
+                os.remove(os.path.join(path, i))
+
+        return result_dict
+
+    ### some argument sanity check
     if shutil.which('perceptabat_cv') is None:
         raise OSError('Failed to execute perceptabat_cv.')
 
-    # checking if arguments match conditions
     if '__' in smiles_filepath or ' ' in smiles_filepath:
         raise ValueError("Please do not use '__' or space characters in input file name.")
+
+    if isinstance(threads, int) and threads > 0:
+        pass
+    else:
+        raise ValueError("Please use positive integer for threads argument.")
+
+    from multiprocessing import cpu_count
+    if cpu_count() < threads:
+        raise ValueError('{0} cores detected. Can not spawn more threads '
+            'than existing cores.'.format(cpu_count()))
+    ### some argument sanity check
 
     # creating translation dictionary for IDs and checking input file
     translation_dict = create_trans_dict(smiles_filepath)
 
     # running with threading
-    if parallel is True:
-
-        if isinstance(threads, int) and threads > 0:
-            pass
-        else:
-            raise ValueError("Please use positive integer for threads argument.")
-
-        # checking the number of cores
-        from multiprocessing import cpu_count
-        if cpu_count() < threads:
-            raise ValueError('{0} cores detected. Can not spawn more threads '
-                'than existing cores.'.format(cpu_count()))
+    if int(threads) > 1:
 
         # counting number of lines in input files
         num_lines = sum(1 for line in open(smiles_filepath))
@@ -203,22 +217,10 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
             t.join()
 
         # parsing chunks
-        result_dict = {}
-        for i in os.listdir(MAIN_PATH):
-            if '__chunk__' and '.result' in i:
-
-                chunk_no = int(i.split('__')[2].split('.')[0])
-
-                with open(os.path.join(MAIN_PATH, i), 'r') as output_file:
-                    temp_result_dict = parse_acd_output(output_file, offset=chunk_no*chunksize)
-                    result_dict.update(temp_result_dict)
-
-            # remove chunk files
-            if '__chunk__' in i:
-                os.remove(os.path.join(MAIN_PATH, i))
+        result_dict = parsing_chunks(MAIN_PATH, chunksize)
 
     # running without threading
-    elif parallel is False:
+    elif int(threads) == 1:
         percepta_cmd(smiles_filepath)
 
         with open('{0}.result'.format(smiles_filepath), 'r') as output_file:
@@ -244,5 +246,5 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
 if __name__ == "__main__":
 
     py_perceptabat(smiles_filepath=sys.argv[1], logd_ph=float(sys.argv[2]),
-        parallel=sys.argv[3], threads=int(sys.argv[4]), logp_algo=sys.argv[5],
-        pka_algo=sys.argv[6], logd_algo=sys.argv[7], logp_train=None)
+        threads=int(sys.argv[3]), logp_algo=sys.argv[4], pka_algo=sys.argv[5],
+        logd_algo=sys.argv[6], logp_train=None)
