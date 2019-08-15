@@ -8,7 +8,6 @@ from threading import Thread
 from typing import Dict, Optional
 import shutil
 import csv
-import sys
 
 def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     threads: int = 1, logp_algo: str = 'classic', pka_algo: str = 'classic',
@@ -146,7 +145,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
                 if col not in COLUMNS:
                     COLUMNS.append(col)
             counter += 1
-            if counter > 1000:
+            if counter > 2000:
                 break
         for key, value in parsed_output.items():
             for col in COLUMNS:
@@ -174,7 +173,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
 
         return result_dict
 
-    ### some argument sanity check
+    # argument sanity check
     if shutil.which('perceptabat_cv') is None:
         raise OSError('Failed to execute perceptabat_cv.')
 
@@ -190,7 +189,6 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     if cpu_count() < threads:
         raise ValueError('{0} cores detected. Can not spawn more threads '
             'than existing cores.'.format(cpu_count()))
-    ### some argument sanity check
 
     # creating translation dictionary for IDs and checking input file
     translation_dict = create_trans_dict(smiles_filepath)
@@ -244,6 +242,8 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     return trans_result_dict
 
 if __name__ == "__main__":
+
+    import sys
 
     py_perceptabat(smiles_filepath=sys.argv[1], logd_ph=float(sys.argv[2]),
         threads=int(sys.argv[3]), logp_algo=sys.argv[4], pka_algo=sys.argv[5],
