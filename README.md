@@ -2,11 +2,13 @@
 * Python wrapper function for ACD perceptabat_cv with parallel processing support.
 
 ## Description
-* Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms.
-* Supports multithreading.
+* Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms;
+* Supports multithreading;
 * Results are returned as a dictionary and are written to a CSV file.
-* No non-standard lib package dependencies.
-* Tested with Python 3.7.2.
+
+## Dependencies
+* ACD Labs perceptabat_cv installed and in PATH;
+* No non-standard lib package dependencies. Tested with Python 3.7.2.
 
 ## Example usage from CLI
 ```
@@ -26,6 +28,6 @@ python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
 * Set logp_train to specify .PCD training file for logP prediction. NOTE training from CLI is currently disabled as the feature has not been properly tested yet.
 
 ## Authors
-* This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com).
+* This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com). Have a question? You can always ask and I can always ignore.
 
-todo: add argparse for CLI argument passing, add unit tests, pka training, test logp training
+todo: add argparse for CLI argument parsing, add unit tests, pka training, test logp training, add Windows support

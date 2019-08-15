@@ -13,42 +13,8 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
     threads: int = 1, logp_algo: str = 'classic', pka_algo: str = 'classic',
     logd_algo: str = 'classic-classic', logp_train: Optional[str] = None) -> Dict[str, Dict[str, str]]:
 
-    '''
-    # py_perceptabat
-    * Python wrapper function for ACD perceptabat_cv with parallel processing support.
-
-    ## Description
-    * Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms.
-    * Supports multithreading.
-    * Results are returned as a dictionary and are written to a CSV file.
-    * No non-standard lib package dependencies.
-    * Tested with Python 3.7.2.
-
-    ## Example usage from CLI
-    ```
-    python py_perceptabat.py 'input_filepath' 'logD pH' 'number of threads' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
-    ```
-    e.g.
-    ```
-    python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
-    ```
-
-    ## Arguments
-    * Set smiles_filepath to specify SMILES input file. The file must have two columns: SMILES and ID separated by a space;
-    * Set logd_ph to define at which pH logD will be calculated;
-    * Set threads argument to specify the number of threads for parallelization. Threads are CPU core bound i.e. one thread per a core;
-    * Set *_algo arguments to specify algorithm for each property prediction. Note that when pka_algo='galas' perceptabat_cv outputs all pKa vlaues for the molecule - this is an expected behaviour of perceptabat_cv;
-    * LogD predictions use logP and pKa properties; algorithms for both respectively must be provided separated by a dash e.g. classic-galas. Please refer to ACD documentation for more details about algorithms;
-    * Set logp_train to specify .PCD training file for logP prediction. NOTE training from CLI is currently disabled as the feature has not been properly tested yet.
-
-    ## Authors
-    * This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com).
-
-    todo: add argparse for CLI argument passing, add unit tests, pka training, test logp training
-    '''
-
-    COLUMNS = []
-    MAIN_PATH = os.path.dirname(os.path.realpath(__file__))
+    ACD_COLUMNS = []
+    main_path = os.path.dirname(os.path.realpath(__file__))
 
     def create_trans_dict(input_file):
 
@@ -142,13 +108,13 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
         counter = 0
         for key, value in parsed_output.items():
             for col, value1 in value.items():
-                if col not in COLUMNS:
-                    COLUMNS.append(col)
+                if col not in ACD_COLUMNS:
+                    ACD_COLUMNS.append(col)
             counter += 1
             if counter > 2000:
                 break
         for key, value in parsed_output.items():
-            for col in COLUMNS:
+            for col in ACD_COLUMNS:
                 if col not in value:
                     parsed_output[key][col] = 'NaN'
 
@@ -195,19 +161,18 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
 
     # running with threading
     if int(threads) > 1:
-
         # counting number of lines in input files
         num_lines = sum(1 for line in open(smiles_filepath))
         chunksize = int(int(num_lines) / threads)
 
         # split the input file into chunks
         split_file(smiles_filepath, chunksize=chunksize)
-        split_file_list = [i for i in os.listdir(MAIN_PATH) if 'chunk' in i]
+        split_file_list = [i for i in os.listdir(main_path) if 'chunk' in i]
 
         # spawning threads
         th = []
         for index, file in enumerate(split_file_list):
-            t = Thread(target=percepta_cmd, args=(os.path.join(MAIN_PATH,file),))
+            t = Thread(target=percepta_cmd, args=(os.path.join(main_path,file),))
             th.append(t)
             th[index].start()
 
@@ -215,7 +180,7 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
             t.join()
 
         # parsing chunks
-        result_dict = parsing_chunks(MAIN_PATH, chunksize)
+        result_dict = parsing_chunks(main_path, chunksize)
 
     # running without threading
     elif int(threads) == 1:
@@ -232,12 +197,12 @@ def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
         trans_result_dict[translation_dict[cp_id]] = props
 
     # writting to csv
-    COLUMNS.append('compound_id')
+    ACD_COLUMNS.append('compound_id')
     with open("{0}_results.csv".format(smiles_filepath.split('.')[0]), "w") as f:
-        w = csv.DictWriter(f, COLUMNS)
+        w = csv.DictWriter(f, ACD_COLUMNS)
         w.writeheader()
         for k in trans_result_dict:
-            w.writerow({col: trans_result_dict[k].get(col) or k for col in COLUMNS})
+            w.writerow({col: trans_result_dict[k].get(col) or k for col in ACD_COLUMNS})
 
     return trans_result_dict
 
