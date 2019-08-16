@@ -227,9 +227,12 @@ def main():
 
     import sys
 
-    py_perceptabat(smiles_filepath=sys.argv[1], logd_ph=float(sys.argv[2]),
-        threads=int(sys.argv[3]), logp_algo=sys.argv[4], pka_algo=sys.argv[5],
-        logd_algo=sys.argv[6], logp_train=None)
+    try:
+        py_perceptabat(smiles_filepath=sys.argv[1], logd_ph=float(sys.argv[2]),
+            threads=int(sys.argv[3]), logp_algo=sys.argv[4], pka_algo=sys.argv[5],
+            logd_algo=sys.argv[6], logp_train=None)
+    except IndexError:
+        print('Missing one or more arguments.')
 
 if __name__ == "__main__":
 
