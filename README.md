@@ -1,27 +1,33 @@
 # py_perceptabat
-* Python wrapper function for ACD perceptabat_cv with parallel processing support.
+Python wrapper function for ACD perceptabat_cv with parallel processing support.
 
 ## Description
 * Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms;
-* Supports multithreading;
+* Multithreading support enables to run calculations on multiple cores resulting in decreased calculation time;
 * Results are returned as a dictionary and are written to a CSV file.
 
 ## Dependencies
 * ACD Labs perceptabat_cv installed and in PATH;
 * No non-standard lib package dependencies. Tested with Python 3.7.2.
 
-## Example usage from CLI
+## Example usage
+### From CLI
 ```
-python py_perceptabat.py 'input_filepath' 'logD pH' 'number of threads' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
+py_perceptabat 'input_filepath' 'logD pH' 'number of threads' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
 ```
 e.g.
 ```
-python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
+py_perceptabat <input_filepath> 7.4 4 classic classic classic-classic
 ```
-## Using as a package
-py_perceptabat_cv can be installed using pip and used as a package;
+### Using as a package
 ```
 from py_perceptabat import py_perceptabat
+py_perceptabat(smiles_filepath='smiles.smi', logd_ph=7.4, threads=1, logp_algo='classic',
+    pka_algo='classic', logd_algo='classic-classic', logp_train=None)
+```
+### As a standalone file
+```
+python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
 ```
 
 ## Arguments
@@ -35,4 +41,4 @@ from py_perceptabat import py_perceptabat
 ## Authors
 * This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com). Have a question? You can always ask and I can always ignore.
 
-todo: add argparse for CLI argument parsing, add unit tests, pka training, test logp training, add Windows support
+todo: add pKa and GALAS training support, add Windows support

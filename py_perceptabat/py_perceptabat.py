@@ -157,7 +157,7 @@ def write_csv(result_dict: Dict[str, Dict[str, str]], smiles_filepath: str = '')
 
     return trans_result_dict
 
-def py_perceptabat(smiles_filepath: str = 'dump.smi', logd_ph: float = 7.4,
+def py_perceptabat(smiles_filepath: str = 'smiles.smi', logd_ph: float = 7.4,
     threads: int = 1, logp_algo: str = 'classic', pka_algo: str = 'classic',
     logd_algo: str = 'classic-classic', logp_train: Optional[str] = None) -> Dict[str, Dict[str, str]]:
 
