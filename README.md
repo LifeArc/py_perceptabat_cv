@@ -18,6 +18,11 @@ e.g.
 ```
 python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
 ```
+## Using as a package
+py_perceptabat_cv can be installed using pip and used as a package;
+```
+from py_perceptabat import py_perceptabat
+```
 
 ## Arguments
 * Set smiles_filepath to specify SMILES input file. The file must have two columns: SMILES and ID separated by a space;

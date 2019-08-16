@@ -18,6 +18,9 @@ setup(
     packages=['py_perceptabat'],
     install_requires=dependencies,
     python_requires='>=3.7.2',
+    entry_points={
+    'console_scripts':'py_perceptabat = py_perceptabat:main'
+    },
     classifiers=[
         'Development Status :: Beta',
         'Intended Audience :: Developers :: Scientists',
