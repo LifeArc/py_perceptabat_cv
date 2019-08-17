@@ -7,12 +7,12 @@ dependencies = []
 setup(
     name="py_perceptabat",
     version="1.0",
-    url='', #
-    license='GNU General Public License v2 (GPLv2)',
+    url='https://github.com/Lifearc/py_perceptabat',
+    license='MIT',
     author='Aretas Gaspariunas',
     author_email='aretas.gaspariunas@lifearc.org, aretasgasp@gmail.com',
-    description='Python wrapper function for ACD perceptabat_cv with parallel processing support.',
-    platforms='Linux, macOS',
+    description='Python wrapper for ACD/Percepta Batch with parallel processing support.',
+    platforms='Linux',
     zip_safe=False,
     long_description=open('README.md').read(),
     packages=['py_perceptabat'],
@@ -25,7 +25,7 @@ setup(
         'Development Status :: Beta',
         'Intended Audience :: Developers :: Scientists',
         'Intended Audience :: Science',
-        'Operating System :: Linux :: macOS',
+        'Operating System :: Linux',
         'Programming Language :: Python :: 3',
         'Topic :: Scientific/Engineering :: chemical descriptors'
     ]
