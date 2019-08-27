@@ -58,7 +58,8 @@ def split_file(filepath: str, chunksize: int = 5000) -> None:
             os.remove(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
                 str(file_count)+'.'+filename.split('.')[1]))
 
-def percepta_cmd(filepath, logp_algo, logd_ph, logd_algo, pka_algo, logp_train=None, verbose=False) -> None:
+def percepta_cmd(filepath, logp_algo, logd_ph, logd_algo, pka_algo, add_flags=[],
+    verbose=False) -> None:
 
     algo_dict = {
         'logp':{"classic":"-OLOGPALGA", "galas":"-OLOGPALGGALAS","consensus":"-OLOGPALGCONSENSUS"},
@@ -73,9 +74,11 @@ def percepta_cmd(filepath, logp_algo, logd_ph, logd_algo, pka_algo, logp_train=N
         "-TLOGD", algo_dict['pka'][pka_algo.lower()], "-TPKA", "-OPKAMOST", "-OOUTSPLITACIDBASIC",
         "-MSIGMA", "-TSIGMA", "-TFNAME{0}.result".format(filepath)]
 
-    logp_train = None if logp_train == 'None' else logp_train
-    if logp_train is not None:
-        cmd_list.append("-ULOGP{}".format(logp_train))
+    # adding user specified flags
+    if add_flags:
+        for i in add_flags:
+            cmd_list.append(i)
+
     cmd_list.append(filepath)
 
     if verbose is True:
@@ -83,7 +86,7 @@ def percepta_cmd(filepath, logp_algo, logd_ph, logd_algo, pka_algo, logp_train=N
     else:
         subprocess.Popen(cmd_list, stdout=subprocess.DEVNULL,stderr=subprocess.STDOUT).wait()
 
-def parse_acd_output(result_file: object, offset: int = 0) -> Dict:
+def parse_percepta_output(result_file: object, offset: int = 0) -> Dict:
 
     parsed_output = {}
 
@@ -113,7 +116,7 @@ def parsing_chunks(chunk_dir_path: str, chunksize: int) -> Dict:
             chunk_no = int(i.split('__')[2].split('.')[0])
 
             with open(os.path.join(chunk_dir_path, i), 'r') as output_file:
-                temp_result_dict = parse_acd_output(output_file, offset=chunk_no*chunksize)
+                temp_result_dict = parse_percepta_output(output_file, offset=chunk_no*chunksize)
                 result_dict.update(temp_result_dict)
 
         # remove chunk files
@@ -179,6 +182,11 @@ def py_perceptabat(smiles_filepath: str = 'smiles.smi', logd_ph: float = 7.4,
     else:
         raise ValueError("Please use positive integer for threads argument.")
 
+    if isinstance(float(logd_ph), float) and float(logd_ph) >= 0:
+        pass
+    else:
+        raise ValueError("LogD pH must be equal or more than 0.")
+
     from multiprocessing import cpu_count
     if cpu_count() < threads:
         raise ValueError('{0} cores detected. Can not spawn more threads '
@@ -215,7 +223,7 @@ def py_perceptabat(smiles_filepath: str = 'smiles.smi', logd_ph: float = 7.4,
         percepta_cmd(smiles_filepath, logp_algo, logd_ph, logd_algo, pka_algo, logp_train)
 
         with open('{0}.result'.format(smiles_filepath), 'r') as output_file:
-            result_dict = parse_acd_output(output_file)
+            result_dict = parse_percepta_output(output_file)
 
         os.remove('{0}.result'.format(smiles_filepath))
 
@@ -230,7 +238,7 @@ def main():
     try:
         py_perceptabat(smiles_filepath=sys.argv[1], logd_ph=float(sys.argv[2]),
             threads=int(sys.argv[3]), logp_algo=sys.argv[4], pka_algo=sys.argv[5],
-            logd_algo=sys.argv[6], logp_train=None)
+            logd_algo=sys.argv[6])
     except IndexError:
         print('Missing one or more arguments.')
 

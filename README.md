@@ -1,49 +1,43 @@
-# py_perceptabat
+# py_perceptabat_cv
 Python wrapper for ACD/Percepta Batch with parallel processing support.
 
 ## Description
-* Calculates logP, logD, most acidic and basic apparent pKa and sigma using classic, GALAS or consensus algorithms;
-* Multithreading support enables to run calculations on multiple cores resulting in decreased calculation time;
-* Results are returned as a dictionary and are written to a CSV file.
+* Uses the same CLI flags as perceptabat_cv so you can feel right at home. For more information on flags please refer to official percepta documentation;
+* Input file must have two columns separated by space with no header: SMILES compound ID;
+* Automatic multithreading support enables to run calculations on multiple cores resulting in faster calculation time. Threads are CPU core bound i.e. one thread per a core;
+* Results are written to a CSV file.
 
 ## Dependencies
-* perceptabat_cv installed and in PATH. Tested with version 2018;
-* No non-standard lib package dependencies. Tested with Python 3.7.2.
+* perceptabat_cv installed and in PATH on a Linux machine. Tested with ACD/Percepta Batch version 2018;
+* No non-standard library package dependencies. Tested with Python 3.7.2.
 
 ## Example usage
-### Using as a package
+### Installing as a command line tool
 ```
-cd py_perceptabat
+cd py_perceptabat_cv
 pip install .
 ```
-#### From CLI
+or without pip
 ```
-py_perceptabat 'input_filepath' 'logD pH' 'number of threads' 'logP algorithm' 'pKa alogrithm' 'logD algorithms'
+python setup.py install
 ```
-e.g.
+#### Example usage from CLI to calculate logP, most acidic/basic pKa, logD (pH=7.4) and sigma values
 ```
-py_perceptabat <input_filepath> 7.4 4 classic classic classic-classic
+py_perceptabat_cv -OOVERWRITE -MLOGP -OLOGPALGA -TLOGP -MLOGD -OLOGDPH17.4 -OLOGDALGCONSCLASS -TLOGD -MPKAAPP -TPKA -OPKAMOST -OOUTSPLITACIDBASIC -MSIGMA -TSIGMA -TFNAME<output_filename> <input_filename>
 ```
-#### Calling within python script
+#### Calling within Python script
 ```
-from py_perceptabat import py_perceptabat
-py_perceptabat(smiles_filepath='smiles.smi', logd_ph=7.4, threads=1, logp_algo='classic',
-    pka_algo='classic', logd_algo='classic-classic', logp_train=None)
+from py_perceptabat_cv import py_perceptabat_cv
+py_perceptabat_cv("-MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <input_filename>")
 ```
-### As a standalone file
+### As a standalone file (located in py_perceptabat_cv folder in package directory)
 ```
-python py_perceptabat.py <input_filepath> 7.4 4 classic classic classic-classic
+python py_perceptabat_cv.py -MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <input_filename>
 ```
 
-## Arguments
-* Set smiles_filepath to specify SMILES input file. The file must have two columns: SMILES and ID separated by a space;
-* Set logd_ph to define at which pH logD will be calculated;
-* Set threads argument to specify the number of threads for parallelization. Threads are CPU core bound i.e. one thread per a core;
-* Set *_algo arguments to specify algorithm for each property prediction. Note that when pka_algo='galas' perceptabat_cv outputs all pKa vlaues for the molecule - this is an expected behaviour of perceptabat_cv;
-* LogD predictions use logP and pKa properties; algorithms for both respectively must be provided separated by a dash e.g. classic-galas. Please refer to ACD documentation for more details about algorithms;
-* Set logp_train to specify .PCD training file for logP prediction. Note, logP training from CLI is currently disabled as the feature has not been properly tested yet.
+## Limiations
+* Input and output file must be .TXT files. SDF and .RDF file formats are not supported at the moment;
+* perceptabat_cv outputs all pKa values for the molecule with GALAS algorithm despite specifying for most acidic/basic centres - this is an expected behaviour of perceptabat_cv;
 
 ## Authors
 * This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com). Have a question? You can always ask and I can always ignore.
-
-todo: add pKa and GALAS training support, add Windows support
