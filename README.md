@@ -35,9 +35,12 @@ py_perceptabat_cv("-MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <input_file
 python py_perceptabat_cv.py -MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <input_filename>
 ```
 
-## Limiations
+## Limitations
 * Input and output file must be .TXT files. SDF and .RDF file formats are not supported at the moment;
 * perceptabat_cv outputs all pKa values for the molecule with GALAS algorithm despite specifying for most acidic/basic centres - this is an expected behaviour of perceptabat_cv;
 
 ## Authors
 * This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com). Have a question? You can always ask and I can always ignore.
+
+## Disclaimer
+* py_perceptabat_cv does not use or include any elements and/or principles ACD/Percepta Batch utility (the software). This is not an attempt to reverese engineer the software or automate any of its elements except for enabling faster processing using multithreading and parsing output file to convert to a CSV file. The software is provided as is with no charge and/or warranty. The author of the package holds no responsability and by using this package the user agrees with this disclaimer.
