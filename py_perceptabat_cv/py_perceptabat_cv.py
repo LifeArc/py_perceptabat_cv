@@ -108,7 +108,8 @@ def parsing_chunks(chunk_dir_path: str, chunksize: int) -> Dict:
 
     return result_dict
 
-def write_csv(result_dict: Dict[str, Dict[str, str]], input_filepath: str = '') -> Dict:
+def write_csv(result_dict: Dict[str, Dict[str, str]], input_filepath: str = '',
+    output_filepath: str = '') -> Dict:
 
     # creating missing keys
     acd_columns = []
@@ -135,7 +136,7 @@ def write_csv(result_dict: Dict[str, Dict[str, str]], input_filepath: str = '') 
     # writting to csv
     acd_columns.append('compound_id')
     dirname, filename = os.path.split(os.path.abspath(input_filepath))
-    with open("{0}_results.csv".format(os.path.join(dirname, filename.split('.')[0])), "w") as f:
+    with open(output_filepath, "w") as f:
         w = csv.DictWriter(f, acd_columns)
         w.writeheader()
         for k in trans_result_dict:
@@ -145,19 +146,20 @@ def write_csv(result_dict: Dict[str, Dict[str, str]], input_filepath: str = '') 
 
 def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> Dict[str, Dict[str, str]]:
 
-    # formatting I/O directories
+    # finding absolute paths for input
     input_filepath = [i for i in percepta_cmd_str.split() if '-' not in i][0]
     i_dirname, i_filename = os.path.split(os.path.abspath(input_filepath))
     percepta_cmd_str = percepta_cmd_str.replace(input_filepath, os.path.join(i_dirname, i_filename))
     input_filepath = os.path.join(i_dirname, i_filename)
 
-    if 'TFNAME' not in percepta_cmd_str:
-        raise ValueError('Outfile must be a .TXT file. .SDF and .RDF are not supported.')
+    # absolute paths for output
+    if 'TFNAME' not in percepta_cmd_str or '-R' in percepta_cmd_str or '-F' in percepta_cmd_str:
+        raise ValueError('Input/outfile must be a .TXT file. .SDF and .RDF are not supported.')
     output_filepath = [i.split('TFNAME')[1] for i in percepta_cmd_str.split() if 'TFNAME' in i][0]
     o_dirname, o_filename = os.path.split(output_filepath)
+
     # use the same directory for output as input file
     percepta_cmd_str = percepta_cmd_str.replace(o_filename, os.path.join(i_dirname, o_filename))
-
     # argument sanity check
     if shutil.which('perceptabat_cv') is None:
         raise OSError('Failed to execute perceptabat_cv.')
@@ -178,7 +180,7 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
         # testing the format of input file
         f.seek(0)
         for index, line in enumerate(f):
-            if line.split() != 2:
+            if len(line.split(' ')) != 2:
                 raise ValueError("Input file should contain two columns in format 'SMILES_col ID_col. Line: {0}".format(index))
 
     # setting number of threads to use
@@ -188,30 +190,30 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
         from multiprocessing import cpu_count
         threads = cpu_count()
 
-    # running with threading
-    if int(threads) >= 1:
+    # split the input file into chunks
+    chunksize = int(round(int(num_lines) / threads, 0))
+    split_file(input_filepath, chunksize=chunksize)
+    split_file_list = [i for i in os.listdir(i_dirname) if 'chunk' in i]
 
-        # split the input file into chunks
-        chunksize = int(round(int(num_lines) / threads, 0))
-        split_file(input_filepath, chunksize=chunksize)
-        split_file_list = [i for i in os.listdir(i_dirname) if 'chunk' in i]
+    # spawning threads
+    th = []
+    for index, file in enumerate(split_file_list):
 
-        # spawning threads
-        th = []
-        for index, file in enumerate(split_file_list):
-            percepta_cmd_str_chunk = percepta_cmd_str.replace(input_filepath, file).replace(
-                o_filename, o_filename+'__chunk__res'+str(index))
-            t = Thread(target=run_cmd, args=(percepta_cmd_str_chunk.split(), ))
-            th.append(t)
-            th[index].start()
+        percepta_cmd_str_chunk = percepta_cmd_str.replace(i_filename, file).replace(
+            o_filename, o_filename+'__chunk__res'+str(index))
 
-        for t in th:
-            t.join()
+        t = Thread(target=run_cmd, args=(percepta_cmd_str_chunk.split(), ))
+        th.append(t)
+        th[index].start()
 
-        # parsing chunks
-        result_dict = parsing_chunks(i_dirname, chunksize)
+    for t in th:
+        t.join()
 
-    trans_result_dict = write_csv(result_dict, input_filepath=input_filepath)
+    # parsing chunks
+    result_dict = parsing_chunks(i_dirname, chunksize)
+
+    trans_result_dict = write_csv(result_dict, input_filepath=input_filepath,
+        output_filepath=os.path.join(i_dirname, o_filename))
 
     return trans_result_dict
 
