@@ -153,14 +153,14 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     input_filepath = os.path.join(i_dirname, i_filename)
 
     # absolute paths for output
-    if 'TFNAME' not in percepta_cmd_str or '-R' in percepta_cmd_str or '-F' in percepta_cmd_str:
-        raise ValueError('Input/outfile must be a .TXT file. .SDF and .RDF are not supported.')
     output_filepath = [i.split('TFNAME')[1] for i in percepta_cmd_str.split() if 'TFNAME' in i][0]
     o_dirname, o_filename = os.path.split(output_filepath)
-
-    # use the same directory for output as input file
     percepta_cmd_str = percepta_cmd_str.replace(o_filename, os.path.join(i_dirname, o_filename))
+
     # argument sanity check
+    if 'TFNAME' not in percepta_cmd_str or '-R' in percepta_cmd_str or '-F' in percepta_cmd_str:
+        raise ValueError('Input/outfile must be a .TXT file. .SDF and .RDF are not supported.')
+
     if shutil.which('perceptabat_cv') is None:
         raise OSError('Failed to execute perceptabat_cv.')
 
@@ -184,11 +184,13 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
                 raise ValueError("Input file should contain two columns in format 'SMILES_col ID_col. Line: {0}".format(index))
 
     # setting number of threads to use
-    if num_lines < 50:
-        threads = 1
-    elif threads is None:
+    if threads is None:
         from multiprocessing import cpu_count
-        threads = cpu_count()
+        threads = 1
+        for i in [i for i in range(1, cpu_count()+1)][::-1]:
+            if num_lines / i > 50:
+                threads = i
+                break
 
     # split the input file into chunks
     chunksize = int(round(int(num_lines) / threads, 0))
