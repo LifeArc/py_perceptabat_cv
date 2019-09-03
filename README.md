@@ -37,7 +37,7 @@ python py_perceptabat_cv.py -MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <i
 
 ## Limitations
 * Input and output file must be .TXT files. SDF and .RDF file formats are not supported at the moment;
-* perceptabat_cv outputs all pKa values for the molecule with GALAS algorithm despite specifying for most acidic/basic centres - this is an expected behaviour of perceptabat_cv;
+* Keep in mind that incredibly large files may take a lot of time to parse or may not work entirely. It is recommended to split it to smaller chunks.
 
 ## Authors
 * This script was written by **Aretas Gaspariunas** (aretas.gaspariunas@lifearc.org or aretasgasp@gmail.com). Have a question? You can always ask and I can always ignore.

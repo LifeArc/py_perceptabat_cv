@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Author: Aretas Gaspariunas 2019
+# Author: Aretas Gaspariunas
 
 import os
 import subprocess
@@ -9,54 +9,37 @@ from typing import Dict, List, Optional
 import shutil
 import csv
 
-def create_trans_dict(input_file: str) -> Dict:
-
-    try:
-        translation_dict = {}
-        with open(input_file, 'r') as f:
-            counter = 1
-            for line in f:
-                smiles, id_ = line.split()
-                translation_dict[str(counter)] = id_
-                counter += 1
-
-        return translation_dict
-
-    except FileNotFoundError:
-        raise
-
 def split_file(filepath: str, chunksize: int = 5000) -> None:
 
-    with open(filepath, 'rb') as file_obj:
+    line_count = 0
+    file_count = 0
 
-        line_count = 0
-        file_count = 0
+    dirname, filename = os.path.split(os.path.abspath(filepath))
 
-        dirname, filename = os.path.split(os.path.abspath(filepath))
+    chunked_file_object = open(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
+        str(file_count)+'.'+filename.split('.')[1]), "wb")
+    for line in (line for line in open(filepath, 'rb')):
+        chunked_file_object.write(line)
+        line_count += 1
+        if line_count == chunksize:
+            chunked_file_object.close()
+            file_count += 1
+            line_count = 0
+            chunked_file_object = open(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
+                str(file_count)+'.'+filename.split('.')[1]), "wb")
 
-        chunked_file_object = open(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
-            str(file_count)+'.'+filename.split('.')[1]), "wb")
-        for line in file_obj:
-            chunked_file_object.write(line)
-            line_count += 1
-            if line_count == chunksize:
-                chunked_file_object.close()
-                file_count += 1
-                line_count = 0
-                chunked_file_object = open(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
-                    str(file_count)+'.'+filename.split('.')[1]), "wb")
+    chunked_file_object.close()
 
-        chunked_file_object.close()
-
-        if line_count == 0:
-            os.remove(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
-                str(file_count)+'.'+filename.split('.')[1]))
+    if line_count == 0:
+        os.remove(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
+            str(file_count)+'.'+filename.split('.')[1]))
 
 def run_cmd(add_flags: List[str] = [], verbose: bool = False, windows=False) -> None:
 
     cmd_list = ["perceptabat_cv"]
     if windows:
-        cmd_list = ["perceptabat_cv.exe"]
+        cmd_list = ["perceptabat_cv.exe"] # Windows feature not tested
+
     # adding user specified flags
     if add_flags:
         for i in add_flags:
@@ -74,11 +57,7 @@ def parse_percepta_output(result_file: object, offset: int = 0) -> Dict:
     parsed_output = {}
 
     for line in result_file:
-
-        if (line.split()[0].isdigit() and line.split()[1] != 'ID:' and
-            'caution' not in line.split()[1].lower() and
-            'warning' not in line.split()[1].lower()):
-
+        if line.split()[0].isdigit() and line.split()[1] != 'ID:':
             cp_id = str(int(line.split()[0]) + offset)
             value = line.split(': ')[1].rstrip('\n')
             if not cp_id in parsed_output:
@@ -95,21 +74,18 @@ def parsing_chunks(chunk_dir_path: str, chunksize: int) -> Dict:
     result_dict = {}
     for i in os.listdir(chunk_dir_path):
         if '__chunk__res' in i:
-
             chunk_no = int(i.split('__')[2].split('.')[0].strip('res'))
-
-            with open(os.path.join(chunk_dir_path, i), 'r') as output_file:
-                temp_result_dict = parse_percepta_output(output_file, offset=chunk_no*chunksize)
-                result_dict.update(temp_result_dict)
-
+            output_file = (line for line in open(os.path.join(chunk_dir_path, i), 'r'))
+            temp_result_dict = parse_percepta_output(output_file, offset=chunk_no*chunksize)
+            result_dict.update(temp_result_dict)
         # remove chunk files
         if '__chunk__' in i:
             os.remove(os.path.join(chunk_dir_path, i))
 
     return result_dict
 
-def write_csv(result_dict: Dict[str, Dict[str, str]], input_filepath: str = '',
-    output_filepath: str = '') -> Dict:
+def write_csv(result_dict: Dict[str, Dict[str, str]], trans_dict: Dict[str, str],
+    input_filepath: str = '', output_filepath: str = '') -> Dict:
 
     # creating missing keys
     acd_columns = []
@@ -126,12 +102,10 @@ def write_csv(result_dict: Dict[str, Dict[str, str]], input_filepath: str = '',
             if col not in value:
                 result_dict[key][col] = 'NaN'
 
-    # creating translation dictionary for IDs and checking input file
-    translation_dict = create_trans_dict(input_filepath)
     # translating dict ids
     trans_result_dict = {}
     for cp_id, props in result_dict.items():
-        trans_result_dict[translation_dict[cp_id]] = props
+        trans_result_dict[trans_dict[cp_id]] = props
 
     # writting to csv
     acd_columns.append('compound_id')
@@ -159,7 +133,7 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
 
     # argument sanity check
     if 'TFNAME' not in percepta_cmd_str or '-R' in percepta_cmd_str or '-F' in percepta_cmd_str:
-        raise ValueError('Input/outfile must be a .TXT file. .SDF and .RDF are not supported.')
+        raise ValueError('Input/output file must be a .TXT file. .SDF and .RDF are not supported.')
 
     if shutil.which('perceptabat_cv') is None:
         raise OSError('Failed to execute perceptabat_cv.')
@@ -167,7 +141,7 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     if not os.path.isfile(input_filepath):
         raise IOError('Failed to find input file.')
 
-    if '__' in input_filepath or ' ' in input_filepath:
+    if '__' in input_filepath or ' ' in input_filepath or 'chunk' in input_filepath:
         raise ValueError("Please do not use '__' or space characters in input file name.")
 
     if isinstance(threads, int) and threads > 0 or threads is None:
@@ -175,13 +149,20 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     else:
         raise ValueError("Please use positive integer for threads argument.")
 
-    with open(input_filepath) as f:
-        num_lines = sum(1 for line in f) # counting number of lines in input file
-        # testing the format of input file
-        f.seek(0)
-        for index, line in enumerate(f):
-            if len(line.split(' ')) != 2:
-                raise ValueError("Input file should contain two columns in format 'SMILES_col ID_col. Line: {0}".format(index))
+    # creating translation dictionary for IDs and checking input file,
+    # counting number of lines in input file
+    try:
+        translation_dict = {}
+        num_lines = 1
+        for l in (line for line in open(input_filepath, 'r')):
+            if len(l.split(' ')) != 2: # checking the format of input file
+                raise ValueError("Input file should contain two columns in format:"
+                    " 'SMILES_col ID_col'. Line: {0}".format(num_lines))
+            smiles, id_ = l.split()
+            translation_dict[str(num_lines)] = id_
+            num_lines += 1
+    except FileNotFoundError:
+        raise
 
     # setting number of threads to use
     if threads is None:
@@ -200,10 +181,8 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     # spawning threads
     th = []
     for index, file in enumerate(split_file_list):
-
         percepta_cmd_str_chunk = percepta_cmd_str.replace(i_filename, file).replace(
             o_filename, o_filename+'__chunk__res'+str(index))
-
         t = Thread(target=run_cmd, args=(percepta_cmd_str_chunk.split(), ))
         th.append(t)
         th[index].start()
@@ -214,7 +193,7 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     # parsing chunks
     result_dict = parsing_chunks(i_dirname, chunksize)
 
-    trans_result_dict = write_csv(result_dict, input_filepath=input_filepath,
+    trans_result_dict = write_csv(result_dict, translation_dict, input_filepath=input_filepath,
         output_filepath=os.path.join(i_dirname, o_filename))
 
     return trans_result_dict
