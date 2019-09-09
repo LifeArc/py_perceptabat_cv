@@ -3,10 +3,10 @@
 # Author: Aretas Gaspariunas
 
 import os
-import subprocess
-from threading import Thread
 from typing import Dict, List, Optional
 import shutil
+import threading
+import subprocess
 import csv
 
 def split_file(filepath: str, chunksize: int = 5000) -> None:
@@ -34,11 +34,9 @@ def split_file(filepath: str, chunksize: int = 5000) -> None:
         os.remove(os.path.join(dirname, filename.split('.')[0]+'__chunk__'+
             str(file_count)+'.'+filename.split('.')[1]))
 
-def run_cmd(add_flags: List[str] = [], verbose: bool = False, windows=False) -> None:
+def run_cmd(add_flags: List[str] = [], verbose: bool = False) -> None:
 
     cmd_list = ["perceptabat_cv"]
-    if windows:
-        cmd_list = ["perceptabat_cv.exe"] # Windows feature not tested
 
     # adding user specified flags
     if add_flags:
@@ -132,28 +130,27 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     percepta_cmd_str = percepta_cmd_str.replace(o_filename, os.path.join(i_dirname, o_filename))
 
     # argument sanity check
-    if 'TFNAME' not in percepta_cmd_str or '-R' in percepta_cmd_str or '-F' in percepta_cmd_str:
-        raise ValueError('Input/output file must be a .TXT file. .SDF and .RDF are not supported.')
-
     if shutil.which('perceptabat_cv') is None:
         raise OSError('Failed to execute perceptabat_cv.')
 
-    if not os.path.isfile(input_filepath):
-        raise IOError('Failed to find input file.')
+    if 'TFNAME' not in percepta_cmd_str or '-R' in percepta_cmd_str or '-F' in percepta_cmd_str:
+        raise ValueError('Input/output file must be a .TXT file. .SDF and .RDF are not supported.')
 
     if '__' in input_filepath or ' ' in input_filepath or 'chunk' in input_filepath:
         raise ValueError("Please do not use '__' or space characters in input file name.")
+
+    if not os.path.isfile(input_filepath):
+        raise IOError('Failed to find input file.')
 
     if isinstance(threads, int) and threads > 0 or threads is None:
         pass
     else:
         raise ValueError("Please use positive integer for threads argument.")
 
-    # creating translation dictionary for IDs and checking input file,
-    # counting number of lines in input file
+    # creating translation dictionary for IDs and checking input file
     try:
         translation_dict = {}
-        num_lines = 1
+        num_lines = 1 # counting number of lines in input file
         for l in (line for line in open(input_filepath, 'r')):
             if len(l.split(' ')) != 2: # checking the format of input file
                 raise ValueError("Input file should contain two columns in format:"
@@ -179,15 +176,17 @@ def py_perceptabat_cv(percepta_cmd_str: str, threads: Optional[int] = None) -> D
     split_file_list = [i for i in os.listdir(i_dirname) if 'chunk' in i]
 
     # spawning threads
-    th = []
-    for index, file in enumerate(split_file_list):
-        percepta_cmd_str_chunk = percepta_cmd_str.replace(i_filename, file).replace(
+    for index, chunk in enumerate(split_file_list):
+        percepta_cmd_str_chunk = percepta_cmd_str.replace(i_filename, chunk).replace(
             o_filename, o_filename+'__chunk__res'+str(index))
-        t = Thread(target=run_cmd, args=(percepta_cmd_str_chunk.split(), ))
-        th.append(t)
-        th[index].start()
+        t = threading.Thread(target=run_cmd, args=(percepta_cmd_str_chunk.split(), ))
+        t.daemon = True
+        t.start()
 
-    for t in th:
+    main_thread = threading.currentThread()
+    for t in threading.enumerate():
+        if t is main_thread:
+            continue
         t.join()
 
     # parsing chunks

@@ -27,6 +27,6 @@ setup(
         'Intended Audience :: Science',
         'Operating System :: Linux',
         'Programming Language :: Python :: 3',
-        'Topic :: Scientific/Engineering :: chemical descriptors'
+        'Topic :: Scientific/Engineering :: chemical descriptors :: chemoinformatics'
     ]
 )
