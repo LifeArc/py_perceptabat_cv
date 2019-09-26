@@ -25,14 +25,14 @@ python setup.py install
 ```
 py_perceptabat_cv -MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <input_filename>
 ```
-#### 2. Calling within Python
+#### 2. Example usage within Python
 ```
 from py_perceptabat_cv import py_perceptabat_cv
 py_perceptabat_cv("-MLOGP -OLOGPALGA -TLOGP -TFNAME<output_filename> <input_filename>")
 ```
 
 ## Limitations
-* Input and output file must be .TXT files. SDF and .RDF file formats are not supported at the moment;
+* Input file must be Daylight SMILES files and output .TXT. Extensions .SDF and .RDF file formats are not supported;
 * Incredibly large input file may take a lot of time to parse or may not work entirely. It is recommended to split it into smaller chunks.
 
 ## Authors
