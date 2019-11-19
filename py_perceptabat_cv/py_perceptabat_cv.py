@@ -250,7 +250,7 @@ def py_perceptabat_cv(
         for i in os.listdir(i_dirname):
             if "__chunk__" in i:
                 os.remove(os.path.join(i_dirname, i))
-        print(e)
+        raise
 
     return trans_result_dict
 

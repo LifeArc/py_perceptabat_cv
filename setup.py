@@ -10,7 +10,7 @@ setup(
     url="https://github.com/Lifearc/py_perceptabat_cv",
     license="MIT",
     author="Aretas Gaspariunas",
-    author_email="aretas.gaspariunas@lifearc.org, aretasgasp@gmail.com",
+    author_email="aretasgasp@gmail.com, aretas.gaspariunas@lifearc.org",
     description="Python wrapper for ACD/Percepta Batch with parallel processing support.",
     platforms="Linux",
     zip_safe=False,
