@@ -23,18 +23,19 @@ def split_file(filepath: str, chunksize: int = 5000) -> None:
         delete=False, prefix=str(file_count) + "__chunk__", suffix=".smi", dir=dirname
     )
 
-    for line in (line for line in open(filepath, "rb")):
-        chunk_temp_file.write(line)
-        line_count += 1
-        if line_count == chunksize:
+    with open(filepath, "rb") as f:
+        for line in f:
+            chunk_temp_file.write(line)
+            line_count += 1
+            if line_count == chunksize:
 
-            chunk_temp_file.close()
-            file_count += 1
-            line_count = 0
+                chunk_temp_file.close()
+                file_count += 1
+                line_count = 0
 
-            chunk_temp_file = tempfile.NamedTemporaryFile(
-                delete=False, prefix=str(file_count) + "__chunk__", suffix=".smi", dir=dirname
-            )
+                chunk_temp_file = tempfile.NamedTemporaryFile(
+                    delete=False, prefix=str(file_count) + "__chunk__", suffix=".smi", dir=dirname
+                )
 
     chunk_temp_file.close()
 
@@ -190,17 +191,18 @@ def py_perceptabat_cv(
     try:
         translation_dict = {}
         num_lines = 1  # counting number of lines in input file
-        for l in (line for line in open(abs_input_filepath, "r")):
-            if (
-                len(l.split(" ")) != 2
-            ):  # checking the format of input file; does not check for SMILES validity
-                raise ValueError(
-                    "Input file should contain two columns in format:"
-                    " 'SMILES_col ID_col'. Line: {0}".format(num_lines)
-                )
-            smiles, id_ = l.split()
-            translation_dict[str(num_lines)] = id_
-            num_lines += 1
+        with open(abs_input_filepath, "r") as f:
+            for l in f:
+                if (
+                    len(l.split(" ")) != 2
+                ):  # checking the format of input file; does not check for SMILES validity
+                    raise ValueError(
+                        "Input file should contain two columns in format:"
+                        " 'SMILES_col ID_col'. Line: {0}".format(num_lines)
+                    )
+                smiles, id_ = l.split()
+                translation_dict[str(num_lines)] = id_
+                num_lines += 1
     except IOError:
         raise
 
