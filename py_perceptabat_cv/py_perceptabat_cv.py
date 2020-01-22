@@ -86,11 +86,12 @@ def parse_chunks(chunk_dir_path: str, chunksize: int) -> Dict[str, Dict[str, str
     for i in os.listdir(chunk_dir_path):
         if "__chunk__res" in i:
             chunk_no = int(i.split("__chunk__result")[1])
-            output_file = (line for line in open(os.path.join(chunk_dir_path, i), "r"))
-            temp_result_dict = parse_percepta_output(
-                output_file, offset=chunk_no * chunksize
-            )
-            result_dict.update(temp_result_dict)
+            with open(os.path.join(chunk_dir_path, i), "r") as output_file:
+            # output_file = (line for line in open(os.path.join(chunk_dir_path, i), "r"))
+                temp_result_dict = parse_percepta_output(
+                    output_file, offset=chunk_no * chunksize
+                )
+                result_dict.update(temp_result_dict)
         # remove input and output chunk files
         if "__chunk__" in i:
             os.remove(os.path.join(chunk_dir_path, i))
