@@ -11,7 +11,7 @@ setup(
     license="MIT",
     author="Aretas Gaspariunas",
     author_email="aretasgasp@gmail.com, aretas.gaspariunas@lifearc.org",
-    description="Python wrapper for ACD/Percepta Batch with parallel processing support.",
+    description="Python wrapper and API for ACD/Percepta Batch with parallel processing support",
     platforms="Linux",
     zip_safe=False,
     long_description=open("README.md").read(),
