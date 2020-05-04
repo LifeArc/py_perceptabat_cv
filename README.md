@@ -3,7 +3,7 @@ Python wrapper and API for ACD/Percepta Batch with parallel processing support
 
 ## Features
 * Uses the same CLI flags as perceptabat_cv so you can feel right at home. For more information on flags please refer to the official documentation
-* Input (file)[py_perceptabat_cv/tests/compounds.smi] must have two columns separated by space with no header
+* Input [file](py_perceptabat_cv/tests/compounds.smi) must have two columns separated by space with no header
 * Automatic multithreading support enables to run calculations on multiple cores resulting in faster overall calculation time. Threads are CPU core bound i.e. one thread per a core
 * Can be imported in Python as a module
 * Results can be written to a CSV file in the same directory as the input file
