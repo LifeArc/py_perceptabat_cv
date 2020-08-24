@@ -2,7 +2,8 @@
 
 import unittest
 import os
-from py_perceptabat_cv import py_perceptabat_cv
+
+from py_perceptabat_cv import py_perceptabat_cv, perceptabat_api
 
 
 class py_perceptabat_test(unittest.TestCase):
@@ -13,7 +14,6 @@ class py_perceptabat_test(unittest.TestCase):
             "-OOUTSPLITACIDBASIC -MSIGMA -TSIGMA -TFNAMEcompounds_results.csv compounds.smi",
             threads=1,
         )
-        os.remove("compounds_results.csv")
 
         self.assertIsInstance(result, dict)
 
@@ -24,7 +24,6 @@ class py_perceptabat_test(unittest.TestCase):
             "-OOUTSPLITACIDBASIC -MSIGMA -TSIGMA -TFNAMEcompounds_results.csv compounds.smi",
             threads=2,
         )
-        os.remove("compounds_results.csv")
 
         self.assertIsInstance(result, dict)
 
@@ -35,7 +34,14 @@ class py_perceptabat_test(unittest.TestCase):
             "-OOUTSPLITACIDBASIC -MSIGMA -TSIGMA -TFNAMEcompounds_results.csv ../tests/compounds.smi",
             threads=2,
         )
-        os.remove("compounds_results.csv")
+
+        self.assertIsInstance(result, dict)
+
+
+class perceptabat_api_test(unittest.TestCase):
+    def test_api(self):
+        d = {"benzene": "c1ccccc1", "phenol": "c1ccc(cc1)O"}
+        result = perceptabat_api(d)
 
         self.assertIsInstance(result, dict)
 

@@ -2,6 +2,6 @@
 __pycache__
 build
 dist
-*/_old.py
 *.pdf
 *.PDF
+*/tests/*.csv

@@ -6,12 +6,12 @@ dependencies = []
 
 setup(
     name="py_perceptabat_cv",
-    version="1.1",
+    version="1.2",
     url="https://github.com/Lifearc/py_perceptabat_cv",
     license="MIT",
     author="Aretas Gaspariunas",
     author_email="aretasgasp@gmail.com, aretas.gaspariunas@lifearc.org",
-    description="Python wrapper and API for ACD/Percepta Batch with parallel processing support",
+    description="Python module and wrapper for ACD/Percepta Batch with parallel processing support",
     platforms="Linux",
     zip_safe=False,
     long_description=open("README.md").read(),
@@ -25,6 +25,6 @@ setup(
         "Intended Audience :: Science",
         "Operating System :: Linux",
         "Programming Language :: Python :: 3",
-        "Topic :: Scientific/Engineering :: chemical descriptors :: chemoinformatics",
+        "Topic :: Scientific/Engineering :: chemical descriptors :: chemoinformatics :: modeling",
     ],
 )
