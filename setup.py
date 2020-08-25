@@ -18,11 +18,11 @@ setup(
     python_requires=">=3.7.2",
     entry_points={"console_scripts": "py_perceptabat_cv = py_perceptabat_cv:main"},
     classifiers=[
-        "Development Status :: Beta",
-        "Intended Audience :: Developers :: Scientists",
-        "Intended Audience :: Science",
-        "Operating System :: Linux",
+        "Development Status :: 5 - Production/Stable",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3",
-        "Topic :: Scientific/Engineering :: chemical descriptors :: chemoinformatics :: modeling",
+        "Topic :: Scientific/Engineering :: Chemistry",
     ],
 )
