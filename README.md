@@ -54,7 +54,7 @@ Written by **Aretas Gaspariunas**. Have a question? You can always ask and I can
 If you found py_perceptabat_cv useful for your work please acknowledge it by citing this repository.
 
 ## License
-MIT license.
+BSD license.
 
 ## :poop: Disclaimer
 py_perceptabat_cv (the package) does not use or include any elements and/or principles ACD/Percepta Batch (the software).
