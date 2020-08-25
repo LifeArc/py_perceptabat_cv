@@ -1,6 +1,6 @@
 # py_perceptabat_cv
 
-[![PyPI version fury.io](https://badge.fury.io/py/py_perceptabat_cv)](https://pypi.python.org/pypi/py_perceptabat_cv/)
+[![PyPI version](https://badge.fury.io/py/py_perceptabat_cv.svg)](https://badge.fury.io/py/py_perceptabat_cv)
 [![PyPI license](https://img.shields.io/pypi/l/py_perceptabat_cv)](https://pypi.python.org/pypi/py_perceptabat_cv/)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen)](https://pypi.python.org/pypi/py_perceptabat_cv/)
 
