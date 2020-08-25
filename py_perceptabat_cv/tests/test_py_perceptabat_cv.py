@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-import os
+from pathlib import Path
 
 from py_perceptabat_cv import py_perceptabat_cv, perceptabat_api
 
@@ -16,6 +16,7 @@ class py_perceptabat_test(unittest.TestCase):
         )
 
         self.assertIsInstance(result, dict)
+        assert len(result) == 3
 
     def test_multi_thread(self):
         result = py_perceptabat_cv(
@@ -26,6 +27,7 @@ class py_perceptabat_test(unittest.TestCase):
         )
 
         self.assertIsInstance(result, dict)
+        assert len(result) == 3
 
     def test_multi_dir_input(self):
         result = py_perceptabat_cv(
@@ -36,6 +38,7 @@ class py_perceptabat_test(unittest.TestCase):
         )
 
         self.assertIsInstance(result, dict)
+        assert len(result) == 3
 
 
     def test_csv_write(self):
@@ -47,9 +50,10 @@ class py_perceptabat_test(unittest.TestCase):
             write_csv=True,
         )
 
-        os.remove("compounds_results.csv")
+        Path("compounds_results.csv").unlink()
 
         self.assertIsInstance(result, dict)
+        assert len(result) == 3
 
 
 class perceptabat_api_test(unittest.TestCase):
@@ -58,6 +62,7 @@ class perceptabat_api_test(unittest.TestCase):
         result = perceptabat_api(d)
 
         self.assertIsInstance(result, dict)
+        assert len(result) == 2
 
 
 if __name__ == "__main__":

@@ -2,8 +2,8 @@
 
 # Author: Aretas Gaspariunas
 
-import os
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import Dict, List, Optional, TextIO
 import shutil
 from tempfile import NamedTemporaryFile
 from multiprocessing import cpu_count
@@ -12,7 +12,7 @@ import subprocess
 import csv
 
 
-def split_file(filepath: str, num_lines:int, chunk_line_count: int = 5000) -> Dict[int, str]:
+def split_file(filepath: Path, num_lines: int, chunk_line_count: int = 5000) -> Dict[int, str]:
 
     """
     Splits a file into smaller chunks based on line count.
@@ -25,10 +25,10 @@ def split_file(filepath: str, num_lines:int, chunk_line_count: int = 5000) -> Di
     final_line_count = 0
     chunk_path_dict = {}
 
-    dirname, filename = os.path.split(os.path.abspath(filepath))
+    dirname = filepath.resolve().parent
 
     chunk_temp_file = NamedTemporaryFile(delete=False, suffix=".smi", dir=dirname)
-    with open(filepath, "rb") as f:
+    with open(filepath.resolve(), "rb") as f:
         for line in f:
             chunk_temp_file.write(line)
             line_count += 1
@@ -48,7 +48,7 @@ def split_file(filepath: str, num_lines:int, chunk_line_count: int = 5000) -> Di
     chunk_temp_file.close()
 
     if line_count == 0:
-        os.remove(chunk_temp_file.name)
+        Path(chunk_temp_file.name).unlink()
 
     return chunk_path_dict
 
@@ -75,7 +75,7 @@ def run_cmd(flag_list: List[str] = [], verbose: bool = False) -> None:
 
 
 def parse_percepta_txt_output(
-    result_file: object, offset: int = 0
+    result_file: TextIO, offset: int = 0
 ) -> Dict[str, Dict[str, str]]:
 
     """
@@ -123,8 +123,8 @@ def parse_chunks(
 def write_results(
     result_dict: Dict[str, Dict[str, str]],
     trans_dict: Dict[str, str],
-    input_filepath: str,
-    output_filepath: str,
+    input_filepath: Path,
+    output_filepath: Path,
     write_csv: Optional[bool] = False,
 ) -> Dict[str, Dict[str, str]]:
 
@@ -175,33 +175,31 @@ def parse_input_string(percepta_cmd_str: str) -> tuple:
     Parses input command string and writes a new version with absolute paths.
     """
 
-    input_filepath = [i for i in percepta_cmd_str.split() if "-" not in i][0]
-    i_dirname, i_filename = os.path.split(os.path.abspath(input_filepath))
+    input_filepath = Path([i for i in percepta_cmd_str.split() if "-" not in i][0])
+    abs_input_filepath = input_filepath.resolve()
     percepta_cmd_str = percepta_cmd_str.replace(
-        input_filepath, os.path.join(i_dirname, i_filename)
+        str(input_filepath), str(abs_input_filepath)
     )
-    abs_input_filepath = os.path.join(i_dirname, i_filename)
 
-    output_filepath = [
+    output_filepath = Path([
         i.split("TFNAME")[1] for i in percepta_cmd_str.split() if "TFNAME" in i
-    ][0]
-    o_dirname, o_filename = os.path.split(output_filepath)
+    ][0])
     percepta_cmd_str = percepta_cmd_str.replace(
-        o_filename, os.path.join(i_dirname, o_filename)
+        str(output_filepath.name), str(abs_input_filepath.parent / output_filepath.name)
     )
 
     return (
-        i_dirname,
-        i_filename,
+        abs_input_filepath.parent,
+        abs_input_filepath.name,
         abs_input_filepath,
         output_filepath,
-        o_dirname,
-        o_filename,
+        output_filepath.parent,
+        output_filepath.name,
         percepta_cmd_str,
     )
 
 
-def sanity_check(percepta_cmd_str: str, abs_input_filepath: str, threads: int) -> None:
+def sanity_check(percepta_cmd_str: str, abs_input_filepath: Path, threads: int) -> None:
 
     """
     Checks for sanity.
@@ -219,10 +217,10 @@ def sanity_check(percepta_cmd_str: str, abs_input_filepath: str, threads: int) -
             "Input/output file must be a TXT file. SDF and RDF extensions are not supported"
         )
 
-    if not os.path.isfile(abs_input_filepath):
+    if not abs_input_filepath.is_file():
         raise FileNotFoundError("Failed to find input file")
 
-    if not abs_input_filepath.lower().endswith(".smi"):
+    if not str(abs_input_filepath).lower().endswith(".smi"):
         raise ValueError("Input file must have .smi extension")
 
     if not (isinstance(threads, int) and threads > 0 or threads is None):
@@ -312,11 +310,9 @@ def py_perceptabat_cv(
     try:
         for chunk_no, chunk in chunk_path_dict.items():
 
-            input_chunk_name = os.path.split(chunk)[-1]
+            input_chunk_name = Path(chunk).name
             output_chunk_name = o_filename + "_result_" + str(chunk_no)
-            output_chunk_path_dict[chunk_no] = os.path.join(
-                i_dirname, output_chunk_name
-            )
+            output_chunk_path_dict[chunk_no] = i_dirname / output_chunk_name
 
             percepta_cmd_str_chunk = percepta_cmd_str.replace(
                 i_filename, input_chunk_name
@@ -341,14 +337,14 @@ def py_perceptabat_cv(
             result_dict,
             translation_dict,
             abs_input_filepath,
-            os.path.join(i_dirname, o_filename), # output_filepath,
+            i_dirname / o_filename, # output_filepath,
             write_csv=write_csv,
         )
     except Exception:
         raise
     finally:
         for i in list(chunk_path_dict.values()) + list(output_chunk_path_dict.values()):
-            os.remove(i)
+            Path(i).unlink()
 
     return trans_result_dict
 
