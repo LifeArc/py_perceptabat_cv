@@ -38,6 +38,20 @@ class py_perceptabat_test(unittest.TestCase):
         self.assertIsInstance(result, dict)
 
 
+    def test_csv_write(self):
+        result = py_perceptabat_cv(
+            "-OOVERWRITE -MLOGP -OLOGPALGA -TLOGP -MLOGD "
+            "-OLOGDPH17.4 -OLOGDALGCONSCLASS -TLOGD -MPKAAPP -TPKA -OPKAMOST "
+            "-OOUTSPLITACIDBASIC -MSIGMA -TSIGMA -TFNAMEcompounds_results.csv ../tests/compounds.smi",
+            threads=2,
+            write_csv=True,
+        )
+
+        os.remove("compounds_results.csv")
+
+        self.assertIsInstance(result, dict)
+
+
 class perceptabat_api_test(unittest.TestCase):
     def test_api(self):
         d = {"benzene": "c1ccccc1", "phenol": "c1ccc(cc1)O"}

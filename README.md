@@ -1,16 +1,16 @@
 # py_perceptabat_cv
-Python wrapper and API for ACD/Percepta Batch with parallel processing support
+Python wrapper and API for ACD/Percepta Batch with parallel processing support.
 
 ## :gem: Features
-* Automatic multithreading support enables to run calculations on multiple cores resulting in faster overall calculation time. Threads are CPU core bound i.e. one thread per a core
-* Can be imported in Python as a module or called from CLI
-* Results are written to a CSV file in the same directory as the input file
-* Use the same CLI options as with ```perceptabat_cv``` so you can feel right at home. For more information on flags please refer to the official documentation
-* Input [file](py_perceptabat_cv/tests/compounds.smi) must have two columns separated by space with no header
+* Automatic multithreading support enables to run calculations on multiple cores resulting in faster overall calculation time. Threads are CPU core bound i.e. one thread per a core.
+* Can be imported in Python as a module or called from CLI.
+* Results are written to a CSV file in the same directory as the input file.
+* Use the same CLI options as with ```perceptabat_cv``` so you can feel right at home. For more information on flags please refer to the official documentation.
+* Input [file](py_perceptabat_cv/tests/compounds.smi) must have two columns separated by space with no header.
 
 ## :hatching_chick: Dependencies
-* ```perceptabat_cv``` installed and in ```PATH``` on a Linux machine. Tested with [ACD/Percepta Batch](https://www.acdlabs.com/products/percepta/index.php) version 2018-2019
-* No non-standard library package dependencies and just modern Python. Tested with Python 3.7.2
+* ```perceptabat_cv``` installed and in ```PATH``` on a Linux machine. Tested with [ACD/Percepta Batch](https://www.acdlabs.com/products/percepta/index.php) version 2018-2019.
+* No non-standard library package dependencies and just modern Python. Tested with Python 3.7.2.
 
 ## :wrench: Installation
 ```
@@ -35,8 +35,8 @@ results = perceptabat_api(d)
 ```
 
 ## :anchor: Limitations
-* Input files must contain Daylight SMILES and output must be specified as TXT. Extensions and file formats SDF and RDF are not supported
-* Incredibly large input files may take a lot of time to parse or may not work entirely. It is recommended to split it into smaller chunks
+* Input files must contain Daylight SMILES and output must be specified as TXT. Extensions and file formats SDF and RDF are not supported.
+* Incredibly large input files may take a lot of time to parse or may not work entirely. It is recommended to split it into smaller chunks.
 * Python API does not support all available options for ```perceptabat_cv```. Please use ```py_perceptabat_cv``` instead for access to all options.
 
 ## :pencil2: Authors
@@ -46,7 +46,7 @@ Written by **Aretas Gaspariunas**. Have a question? You can always ask and I can
 If you found py_perceptabat_cv useful for your work please acknowledge it by citing this repository.
 
 ## License
-Code released under the MIT license.
+MIT license.
 
 ## :poop: Disclaimer
 py_perceptabat_cv (the package) does not use or include any elements and/or principles ACD/Percepta Batch (the software).
