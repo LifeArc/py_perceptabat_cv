@@ -12,7 +12,7 @@ import subprocess
 import csv
 
 
-def split_file(filepath: str, chunk_line_count: int = 5000) -> Dict[int, str]:
+def split_file(filepath: str, num_lines:int, chunk_line_count: int = 5000) -> Dict[int, str]:
 
     """
     Splits a file into smaller chunks based on line count.
@@ -22,17 +22,19 @@ def split_file(filepath: str, chunk_line_count: int = 5000) -> Dict[int, str]:
 
     line_count = 0
     file_count = 0
+    final_line_count = 0
     chunk_path_dict = {}
 
     dirname, filename = os.path.split(os.path.abspath(filepath))
 
     chunk_temp_file = NamedTemporaryFile(delete=False, suffix=".smi", dir=dirname)
-
     with open(filepath, "rb") as f:
         for line in f:
             chunk_temp_file.write(line)
             line_count += 1
-            if line_count == chunk_line_count:
+            final_line_count += 1
+
+            if line_count == chunk_line_count or final_line_count == num_lines:
 
                 chunk_path_dict[file_count] = chunk_temp_file.name
                 file_count += 1
@@ -304,7 +306,7 @@ def py_perceptabat_cv(
 
     # split the input file into chunks
     chunk_line_count = int(round(int(num_lines) / threads, 0))
-    chunk_path_dict = split_file(abs_input_filepath, chunk_line_count=chunk_line_count)
+    chunk_path_dict = split_file(abs_input_filepath, num_lines, chunk_line_count=chunk_line_count)
     output_chunk_path_dict = {}
 
     try:
