@@ -42,7 +42,7 @@ Computer used for this benchmark:
 * OS: Linux CentOS 7.7.1908
 * Hardware: Intel(R) Xeon(R) Platinum 8168 CPU @ 2.70GHz - 4 cores
 
-With a conventional 4 core processor a 10000 compounds are processed in **50.25** seconds with `py_perceptabat_cv` vs **126.17** seconds with `perceptabat_cv`.
+10000 compounds processed in **50.25** seconds with `py_perceptabat_cv` vs **126.17** seconds with `perceptabat_cv`.
 
 ## :anchor: Limitations
 * Input files must contain Daylight SMILES and output must be specified as TXT. Extensions and file formats SDF and RDF are not supported.
@@ -61,4 +61,4 @@ BSD license.
 ## :poop: Disclaimer
 py_perceptabat_cv (the package) does not use or include any elements and/or principles ACD/Percepta Batch (the software).
 This is not an attempt to reverse engineer the software or automate any of its elements except and only for enabling faster calculation time and parsing of the output file.
-The software is provided as is with no charge and/or warranty. The author of the package holds no responsibility for any results and/or outcome due to the package usage and by using the package the user agrees with this disclaimer.
+The package is provided as is with no charge and/or warranty. The author of the package holds no responsibility for any results and/or outcome due to the package usage and by using the package the user agrees with this disclaimer.

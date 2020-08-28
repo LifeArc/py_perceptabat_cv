@@ -12,7 +12,7 @@ setup(
     description="Python wrapper and API for ACD/Percepta Batch with parallel processing support",
     platforms="Linux",
     zip_safe=False,
-    long_description=open("README.md").read(),
+    long_description="See https://github.com/Lifearc/py_perceptabat_cv for a detailed description.",
     packages=["py_perceptabat_cv"],
     install_requires=dependencies,
     python_requires=">=3.7.2",
