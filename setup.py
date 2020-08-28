@@ -4,7 +4,7 @@ dependencies = []
 
 setup(
     name="py_perceptabat_cv",
-    version="1.2",
+    version="1.2.1",
     url="https://github.com/Lifearc/py_perceptabat_cv",
     license="BSD",
     author="Aretas Gaspariunas",
