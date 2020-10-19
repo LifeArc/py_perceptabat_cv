@@ -409,6 +409,13 @@ def perceptabat_api(
         "classic_classic": "CLASS",
     }
 
+    if 'logd_ph' not in param:
+        param['logd_ph'] = '7.4'
+    if 'logp_algorithm' not in param:
+        param['logp_algorithm'] = 'consensus'
+    if 'pka_algorithm' not in param:
+        param['pka_algorithm'] = 'classic'
+
     prop_conversion = {
         "logp": f"-MLOGP -TLOGP -OLOGPALG{logp_param_conversion[param['logp_algorithm']]} -OLOGPRULE5FULL -OLOGPRULE5FRB -OLOGPRULE5PSA",
         "pka": f"-MPKAAPP{pka_param_conversion[param['pka_algorithm']]} -TPKA -OPKAMOST -OOUTSPLITACIDBASIC",
