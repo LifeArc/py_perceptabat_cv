@@ -344,7 +344,8 @@ def py_perceptabat_cv(
         raise
     finally:
         for i in list(chunk_path_dict.values()) + list(output_chunk_path_dict.values()):
-            Path(i).unlink()
+            if Path(i).exists():
+                Path(i).unlink()
 
     return trans_result_dict
 
