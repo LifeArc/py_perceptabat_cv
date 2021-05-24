@@ -285,8 +285,8 @@ def py_perceptabat_cv(
                     len(l.split(" ")) != 2
                 ):  # checking the format of input file; does not check for SMILES validity
                     raise ValueError(
-                        f"Input file should contain two columns separated by a space in a format:"
-                        " 'SMILES_col ID_col'. Line: {num_lines}"
+                        "Input file should contain two columns separated by a space in a format:"
+                        f" 'SMILES_col ID_col'. Bad Line: {num_lines}"
                     )
                 smiles, id_ = l.split()
                 num_lines += 1
